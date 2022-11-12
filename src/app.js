@@ -15,6 +15,6 @@ app.use(express.json())
 
 app.use(routes)
 
-app.listen(port, async () => {
-    console.log(`Server escutando a porta ${port} http://localhost:${port}`)
+app.listen(process.env.PORT || port, async () => {
+    console.log(`Server escutando a porta ${process.env.PORT || port} http://localhost:${port}`)
 })
