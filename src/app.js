@@ -1,5 +1,6 @@
 // Requires
 const express = require('express')
+const cors = require('cors')
 const ConnectionService = require('./Services/ConnectionService')
 
 // Routes
@@ -11,6 +12,7 @@ const app = express()
 // Define onde está o banco de dados que será usado
 ConnectionService.setDatabase(__dirname + '/../Database.db');
 
+app.use(cors())
 app.use(express.json())
 
 app.use(routes)
