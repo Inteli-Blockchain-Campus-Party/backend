@@ -63,7 +63,7 @@ contract RecordFactory {
         return (record.disease, record.hospital, record.date, record.time);
     }
 
-    // NFT mint with the photo and metadate of the record to IPFS
+    // Emit the mint record with the photo and metadate of the record to IPFS
     function createRecord(string memory _ipfsLink) public isOwner {
         Record mintRecord = new Record(_ipfsLink, owner);
 
