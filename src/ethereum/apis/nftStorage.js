@@ -19,7 +19,7 @@ async function storeNFT(file, name, description) {
     if (file) {
         image = new File([file.buffer], file.originalname, { type: file.mimetype })
     } else {
-        image = await fileFromPath(__dirname + '/../../images/lectureNftDefault.png')
+        image = await fileFromPath(__dirname + '/../../images/reportNftDefault.png')
     }
 
     // create a new NFTStorage client using our API key
