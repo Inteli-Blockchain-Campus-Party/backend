@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/3.1.2/rollups/aes.js"></script>
+    <script src="https://cdn.ethers.io/lib/ethers-5.2.umd.min.js"></script>
+    <title>Document</title>
+</head>
+<body>
+    <label for="disease">Disease: </label>
+    <input id="disease">
+    <label for="password">Passoword: </label>
+    <input id="password">
+    <button onclick="getUploadData()">Save</button>
+    <label for="ipfs">ipfs: </label>
+    <input id="ipfs">
+    <button onclick="fetchData()">Fetch</button>
+    <label for="account">Account: </label>
+    <input id="account">
+    <button onclick="getNFTs()">Ver NFTs</button>
+    <div id="seeResult"></div>
+    <div id="NFTs"></div>
+    <script src="index.js"></script>
+</body>
+</html>
