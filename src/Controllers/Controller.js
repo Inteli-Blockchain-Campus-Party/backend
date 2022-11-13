@@ -11,14 +11,10 @@ class Controller {
         } catch (error) {
             if(error instanceof APIError){
                 LogService.logDanger(`API Error ${JSON.stringify(error)}`);
-                res.header("Access-Control-Allow-Origin", "*");
-                res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
                 res.status(error.status);
                 res.json(error.getObjectForClient());
             } else {
                 console.log(error);
-                res.header("Access-Control-Allow-Origin", "*");
-                res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
                 res.status(500);
                 res.json({
                     status: 500,
