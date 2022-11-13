@@ -5,10 +5,13 @@ const APIError = require('../Services/ErrorService');
 
 // Require Routes
 const IndexController = require('../Controllers/IndexController');
+const DiseaseController = require('../Controllers/DiseaseController');
 
 const router = express.Router();
 
 router.get("/", IndexController.get);
+
+router.post("/diesieses", DiseaseController.post);
 
 router.all('*', (req, res) => Controller.execute(req, res, async (req, res) => {
     const apiError = new APIError("Requisitada um request que não existe", 403);
