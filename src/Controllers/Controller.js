@@ -1,5 +1,5 @@
-const APIError = require('../services/ErrorService');
-const LogService = require('../services/LogService');
+const APIError = require('../Services/ErrorService');
+const LogService = require('../Services/LogService');
 
 class Controller {
     static async execute(req, res, callback) {
