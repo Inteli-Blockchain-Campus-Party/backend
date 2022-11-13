@@ -1,11 +1,8 @@
 const Controller = require('./Controller');
 const crypto = require('crypto');
-const dotenv = require('dotenv').config()
-
-const jsonwebtoken = require('jsonwebtoken')
-
 const Connection = require('../Services/ConnectionService');
 const APIError = require('../Services/ErrorService');
+const AuthService = require('../Services/AuthService');
 
 class UserController {
     static create = (req, res) => Controller.execute(req, res, async (req, res) => {
@@ -31,9 +28,7 @@ class UserController {
             update_date: update_date
         });
 
-        const token = jsonwebtoken.sign({id: id}, process.env.SECRET_KEY, {
-            expiresIn: '5h'
-        })
+        const token = AuthService.makeTokenWithId(id);
 
         res.json({token: token})
     });
@@ -55,7 +50,7 @@ class UserController {
         if(crypto.pbkdf2Sync(password, user.password_salt, 1000, 64, 'sha1').toString('hex') == user.password_hash){
             res.send({
                 token: jsonwebtoken.sign({id: user.id}, process.env.SECRET_KEY, {
-                    expiresIn: '5h'
+                    expiresIn: '5s'
                 })
             })
         }else {
@@ -66,11 +61,9 @@ class UserController {
     })
 
     static get = (req, res) => Controller.execute(req, res, async (req, res) => {
-        const token = jsonwebtoken.decode(req.headers.authorization);
+        const id = AuthService.getIdByToken(req.headers.authorization);
 
-        if(!req.headers.authorization || !token.id) return res.send('Token is a mandatory header field');
-
-        const user = await Connection.get("SELECT * FROM hv_user WHERE hv_user.id = $id", {id: token.id});
+        const user = await Connection.get("SELECT * FROM hv_user WHERE hv_user.id = $id", {id: id});
 
         res.send({
             id: user.id,
@@ -80,9 +73,7 @@ class UserController {
     });
 
     static update = (req, res) => Controller.execute(req, res, async (req, res) => {
-        const token = jsonwebtoken.decode(req.headers.authorization);
-
-        if(!req.headers.authorization || !token.id) return res.send('Token is a mandatory header field');
+        const id = AuthService.getIdByToken(req.headers.authorization);
 
         const {wallet, cpf} = req.body;
 
@@ -95,17 +86,15 @@ class UserController {
             }
         });
 
-        console.log(cleanUpdateEntrie)
-
         if(cleanUpdateEntrie.length){
             const date = new Date();
             const update_date = date.getFullYear()  + "-" + date.getMonth()  + "-" + date.getDay();
             updateObject.update_date = update_date;
 
-            await Connection.update(`UPDATE hv_user SET ${Object.keys(updateObject).map(key => `${key} = $${key}`).join(", ")} WHERE id = $id`, {...updateObject, id: token.id})
+            await Connection.update(`UPDATE hv_user SET ${Object.keys(updateObject).map(key => `${key} = $${key}`).join(", ")} WHERE id = $id`, {...updateObject, id: id})
         }
         
-        const user = await Connection.get("SELECT * FROM hv_user WHERE hv_user.id = $id", {id: token.id});
+        const user = await Connection.get("SELECT * FROM hv_user WHERE hv_user.id = $id", {id: id});
 
         res.send({
             id: user.id,
@@ -115,11 +104,9 @@ class UserController {
     });
 
     static delete = (req, res) => Controller.execute(req, res, async (req, res) => {
-        const token = jsonwebtoken.decode(req.headers.authorization);
+        const id = AuthService.getIdByToken(req.headers.authorization);
 
-        if(!req.headers.authorization || !token.id) return res.send('Token is a mandatory header field');
-
-        await Connection.delete(`DELETE FROM hv_user WHERE hv_user.id = $id`, {id: token.id});
+        await Connection.delete(`DELETE FROM hv_user WHERE hv_user.id = $id`, {id: id});
 
         res.sendStatus(200);
     });

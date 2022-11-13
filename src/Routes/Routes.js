@@ -8,6 +8,7 @@ const IndexController = require('../Controllers/IndexController');
 const RecordController = require('../Controllers/RecordController');
 const UserController = require('../Controllers/UserController');
 
+const AuthMiddleware = require('../Middlewares/AuthMiddleware');
 
 const router = express.Router();
 
@@ -15,9 +16,9 @@ router.get("/", IndexController.get);
 
 router.post("/user", UserController.create);
 router.post("/login", UserController.login);
-router.get("/user", UserController.get);
-router.put("/user", UserController.update);
-router.delete("/user", UserController.delete);
+router.get("/user", AuthMiddleware.verifyUserToken, UserController.get);
+router.put("/user", AuthMiddleware.verifyUserToken, UserController.update);
+router.delete("/user", AuthMiddleware.verifyUserToken, UserController.delete);
 
 router.post("/records", RecordController.post);
 
