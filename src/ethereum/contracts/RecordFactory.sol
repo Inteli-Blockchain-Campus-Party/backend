@@ -1,14 +1,25 @@
 //SPDX-License-Identifier: GPL-3.0
 pragma solidity ^0.8.5;
 
-import "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
+import "./Record.sol";
 
-contract RecordFactory is ERC1155 {
+contract RecordFactory {
+    // Definition of the owner address and the array with the created records
     address public owner;
-    address[] reports;
+    address[] records;
 
-    uint256 idCount;
+    // Checks if the owner is the one who calls the contract
+    modifier isOwner() {
+        require(owner == msg.sender, "Not owner");
+        _;
+    }
 
+    // Sign the owner to the one who calls the contract
+    constructor() {
+        owner = msg.sender;
+    }
+
+    // Storage the record data
     struct HospitalRecord {
         string disease;
         string hospital;
@@ -16,18 +27,13 @@ contract RecordFactory is ERC1155 {
         string time;
     }
 
-    modifier isOwner() {
-        require(owner == msg.sender, "Not owner");
-        _;
-    }
+    event NewRecord(address);
 
-    constructor(string memory _ipfsLink) ERC1155(_ipfsLink) {
-        owner = msg.sender;
-    }
-
+    // Bind the address to the record datas defined
     mapping(address => HospitalRecord[]) public hospitalRecords;
 
-    function generateReport(
+    // Generate the record based on the record data structure defined
+    function generateRecord(
         string memory _disease,
         string memory _hospital,
         string memory _date,
@@ -42,6 +48,7 @@ contract RecordFactory is ERC1155 {
         hospitalRecords[msg.sender].push(newRecord);
     }
 
+    // Get all the information storaged on a specific record
     function getRecord(address _address)
         public
         view
@@ -56,17 +63,17 @@ contract RecordFactory is ERC1155 {
         return (record.disease, record.hospital, record.date, record.time);
     }
 
-    function createReport() public isOwner {
-        idCount += 1;
-        require(msg.sender == owner);
-        _mint(owner, idCount, 1, "");
+    // NFT mint with the photo and metadate of the record to IPFS
+    function createRecord(string memory _ipfsLink) public isOwner {
+        Record mintRecord = new Record(_ipfsLink, owner);
+
+        emit NewRecord(address(mintRecord));
+
+        records.push(address(mintRecord));
     }
 
-    function burnNFT(address _address, uint256 _id) public isOwner {
-        _burn(_address, _id, 1);
-    }
-
-    function viewReports() public view isOwner returns (address[] memory) {
-        return (reports);
+    // Get all the addresses of the records created
+    function viewRecords() public view isOwner returns (address[] memory) {
+        return (records);
     }
 }
