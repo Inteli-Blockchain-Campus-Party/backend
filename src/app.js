@@ -9,7 +9,7 @@ const port = 3001;
 const app = express()
 
 // Define onde está o banco de dados que será usado
-ConnectionService.setDatabase('./../Database.db');
+ConnectionService.setDatabase(__dirname + '/../Database.db');
 
 app.use(express.json())
 
