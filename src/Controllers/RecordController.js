@@ -1,9 +1,9 @@
 const Controller = require('./Controller');
 
-class DiseaseController {
+class RecordController {
     static post = (req, res) => Controller.execute(req, res, async (req, res) => {
         
     })
 }
 
-module.exports = DiseaseController
+module.exports = RecordController
