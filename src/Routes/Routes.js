@@ -7,6 +7,7 @@ const APIError = require('../Services/ErrorService');
 const IndexController = require('../Controllers/IndexController');
 const RecordController = require('../Controllers/RecordController');
 const UserController = require('../Controllers/UserController');
+const HealthEntityController = require('../Controllers/HealthEntityController');
 
 const AuthMiddleware = require('../Middlewares/AuthMiddleware');
 
@@ -19,6 +20,12 @@ router.post("/login", UserController.login);
 router.get("/user", AuthMiddleware.verifyUserToken, UserController.get);
 router.put("/user", AuthMiddleware.verifyUserToken, UserController.update);
 router.delete("/user", AuthMiddleware.verifyUserToken, UserController.delete);
+
+router.post("/health-entity", HealthEntityController.create);
+router.post("/health-entity/login", HealthEntityController.login);
+router.get("/health-entity", AuthMiddleware.verifyUserToken, HealthEntityController.get);
+router.put("/health-entity", AuthMiddleware.verifyUserToken, HealthEntityController.update);
+router.delete("/health-entity", AuthMiddleware.verifyUserToken, HealthEntityController.delete);
 
 router.post("/records", RecordController.post);
 

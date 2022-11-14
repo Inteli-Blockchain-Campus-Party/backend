@@ -1,4 +1,4 @@
-const dotenv = require('dotenv').config()
+const dotenv = require('dotenv').config({path: __dirname + '/../../.env'})
 
 const { TokenExpiredError } = require('jsonwebtoken');
 const jsonwebtoken = require('jsonwebtoken');
@@ -47,6 +47,7 @@ class AuthService {
     }
 
     static makeTokenWithId = (id, expires = '5h') => {
+        console.log(process.env.SECRET_KEY)
         return jsonwebtoken.sign({id: id}, process.env.SECRET_KEY, {
             expiresIn: expires || '5h'
         })

@@ -4,13 +4,14 @@ const Connection = require('../Services/ConnectionService');
 const APIError = require('../Services/ErrorService');
 const AuthService = require('../Services/AuthService');
 
-class UserController {
+class HealthEntityController {
     static create = (req, res) => Controller.execute(req, res, async (req, res) => {
-        const { password, wallet, cpf } = req.body;
+        const { password, cnpj, email, name} = req.body;
         
-        if(!password) res.status(400).send("Password is a mandatory field");
-        if(!wallet) res.status(400).send("Wallet is a mandatory field");
-        if(!cpf) res.status(400).send("Cpf is a mandatory field");
+        if(!password) throw new APIError("Password is a mandatory field", 400);
+        if(!cnpj) throw new APIError("Cnpj is a mandatory field", 400);
+        if(!email) throw new APIError("Email is a mandatory field", 400);
+        if(!name) throw new APIError("Name is a mandatory field", 400);
 
         const password_salt = crypto.randomBytes(10).toString("hex");
         const password_hash = crypto.pbkdf2Sync(password, password_salt, 1000, 64, 'sha1').toString('hex');
@@ -19,11 +20,12 @@ class UserController {
         const creation_date = date.getFullYear()  + "-" + date.getMonth()  + "-" + date.getDate()
         const update_date = null;
 
-        const id = await Connection.insert("INSERT INTO hv_user (password_hash, password_salt, wallet, cpf, creation_date, update_date) VALUES ($password_hash, $password_salt, $wallet, $cpf, $creation_date, $update_date)", {
+        const id = await Connection.insert("INSERT INTO hv_health_entity (password_hash, password_salt, name, cnpj, email, creation_date, update_date) VALUES ($password_hash, $password_salt, $name, $cnpj, $email, $creation_date, $update_date)", {
             password_hash: password_hash,
             password_salt: password_salt,
-            wallet: wallet,
-            cpf: cpf,
+            name: name,
+            cnpj: cnpj,
+            email: email,
             creation_date: creation_date,
             update_date: update_date
         });
@@ -36,20 +38,20 @@ class UserController {
     static login = (req, res) => Controller.execute(req, res, async (req, res) => {
         const { login, password } = req.body;
 
-        if(!login) res.status(400).send("Login is a mandatory field");
-        if(!password) res.status(400).send("Password is a mandatory field");
+        if(!login) throw new APIError("Login is a mandatory field", 400);
+        if(!password) throw new APIError("Password is a mandatory field", 400);
 
-        const user = await Connection.get("SELECT * FROM hv_user WHERE wallet= $login OR cpf = $login", {
+        const healthEntity = await Connection.get("SELECT * FROM hv_health_entity WHERE cnpj= $login OR email = $login", {
             login: login
         });
 
-        if(!user){
-            throw new APIError("User not found", 404);
+        if(!healthEntity){
+            throw new APIError("healthEntity not found", 404);
         }
 
-        if(crypto.pbkdf2Sync(password, user.password_salt, 1000, 64, 'sha1').toString('hex') == user.password_hash){
+        if(crypto.pbkdf2Sync(password, healthEntity.password_salt, 1000, 64, 'sha1').toString('hex') == healthEntity.password_hash){
             res.send({
-                token: AuthService.makeTokenWithId(user.id)
+                token: AuthService.makeTokenWithId(healthEntity.id)
             })
         }else {
             res.status(403).send({
@@ -61,25 +63,26 @@ class UserController {
     static get = (req, res) => Controller.execute(req, res, async (req, res) => {
         const id = AuthService.getIdByToken(req.headers.authorization);
 
-        const user = await Connection.get("SELECT * FROM hv_user WHERE hv_user.id = $id", {id: id});
+        const healthEntity = await Connection.get("SELECT * FROM hv_health_entity WHERE hv_health_entity.id = $id", {id: id});
 
-        if(!user){
-            throw new APIError("User not found", 400);
+        if(!healthEntity){
+            throw new APIError("Health Entity not found", 400);
         }
 
         res.send({
-            id: user.id,
-            wallet: user.wallet,
-            cpf: user.cpf
+            id: healthEntity.id,
+            name: healthEntity.name,
+            cnpj: healthEntity.cnpj,
+            email: healthEntity.email
         });
     });
 
     static update = (req, res) => Controller.execute(req, res, async (req, res) => {
         const id = AuthService.getIdByToken(req.headers.authorization);
 
-        const {wallet, cpf} = req.body;
+        const {cnpj, email, name} = req.body;
 
-        let updateObject = {wallet: wallet, cpf: cpf};
+        let updateObject = {cnpj: cnpj, email: email, name: name};
         let cleanUpdateEntrie = Object.entries(updateObject).filter(element => element[1]);
     
         Object.entries(updateObject).forEach(element => {
@@ -93,25 +96,26 @@ class UserController {
             const update_date = date.getFullYear()  + "-" + date.getMonth()  + "-" + date.getDate();
             updateObject.update_date = update_date;
 
-            await Connection.update(`UPDATE hv_user SET ${Object.keys(updateObject).map(key => `${key} = $${key}`).join(", ")} WHERE id = $id`, {...updateObject, id: id})
+            await Connection.update(`UPDATE hv_health_entity SET ${Object.keys(updateObject).map(key => `${key} = $${key}`).join(", ")} WHERE id = $id`, {...updateObject, id: id})
         }
         
-        const user = await Connection.get("SELECT * FROM hv_user WHERE hv_user.id = $id", {id: id});
+        const healthEntity = await Connection.get("SELECT * FROM hv_health_entity WHERE hv_health_entity.id = $id", {id: id});
 
         res.send({
-            id: user.id,
-            wallet: user.wallet,
-            cpf: user.cpf
+            id: healthEntity.id,
+            cnpj: healthEntity.cnpj,
+            email: healthEntity.email,
+            name: healthEntity.name
         });
     });
 
     static delete = (req, res) => Controller.execute(req, res, async (req, res) => {
         const id = AuthService.getIdByToken(req.headers.authorization);
 
-        await Connection.delete(`DELETE FROM hv_user WHERE hv_user.id = $id`, {id: id});
+        await Connection.delete(`DELETE FROM hv_health_entity WHERE hv_health_entity.id = $id`, {id: id});
 
         res.sendStatus(200);
     });
 }
 
-module.exports = UserController
+module.exports = HealthEntityController
