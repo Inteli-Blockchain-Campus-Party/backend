@@ -22,7 +22,7 @@ class UserNFTKeyController {
         const encryptedInfo = CriptoService.encrypt(info, key);
         const formatedMetadata = CriptoService.formatNFTMetadata(encryptedInfo, level);
         const tokenInfo = await CriptoService.upload(formatedMetadata);
-        // await CriptoService.mintNFT(user.wallet, tokenInfo.IpfsHash )
+        await CriptoService.mintNFT(user.wallet, tokenInfo.IpfsHash)
 
         const date = new Date();
         const creation_date = date.getFullYear()  + "-" + date.getMonth()  + "-" + date.getDate()
@@ -49,9 +49,9 @@ class UserNFTKeyController {
 
     static get = (req, res) => Controller.execute(req, res, async (req, res) => {
         const id = req.params.id;
-        const withNFTInfo = req.params.withNFT;
+        const withNFTInfo = req.query.withNFT;
 
-        const userNFTKey = await Connection.get("SELECT * FROM hv_user_nft_key WHERE hv_user_nft_key.id = $id", {id: id});
+        const userNFTKey = await Connection.get("SELECT hv_user_nft_key.*, hv_user.wallet AS wallet_user FROM hv_user_nft_key INNER JOIN hv_user ON hv_user.id = hv_user_nft_key.user_id WHERE hv_user_nft_key.id = $id", {id: id});
 
         if(!userNFTKey){
             throw new APIError("Key not found", 400);
@@ -59,8 +59,12 @@ class UserNFTKeyController {
 
         let info = undefined;
         if(withNFTInfo){
-            info = {}
-            // Pegar informações da NFT;
+            info = {};
+            const nft = await CriptoService.getNFT(userNFTKey.wallet_user, userNFTKey.key);
+            if(nft){
+                const infoNft = CriptoService.getDecriptedDataFromNFT(nft);
+                info = infoNft
+            }
         }
 
         res.send({
@@ -73,16 +77,21 @@ class UserNFTKeyController {
 
     static all = (req, res) => Controller.execute(req, res, async (req, res) => {
         const userId = AuthService.getIdByToken(req.headers.authorization);
-        const withNFTInfo = req.params.withNFT;
+        const withNFTInfo = req.query.withNFT;
 
-        const userNFTKeys = await Connection.all("SELECT * FROM hv_user_nft_key WHERE hv_user_nft_key.user_id = $user_id", {user_id: userId});
+        const userNFTKeys = await Connection.all("SELECT hv_user_nft_key.*, hv_user.wallet AS wallet_user FROM hv_user_nft_key INNER JOIN hv_user ON hv_user.id = hv_user_nft_key.user_id WHERE hv_user_nft_key.user_id = $user_id", {user_id: userId});
 
-        res.send(userNFTKeys.map(element => {
+        res.send(await Promise.all(userNFTKeys.map(async element => {
+
             let info = undefined;
 
             if(withNFTInfo){
-                info = {}
-            // Pegar informações da NFT;
+                info = {};
+                const nft = await CriptoService.getNFT(element.wallet_user, element.key);
+                if(nft){
+                    const infoNft = CriptoService.getDecriptedDataFromNFT(nft);
+                    info = infoNft
+                }
             }
 
             return {
@@ -91,7 +100,7 @@ class UserNFTKeyController {
                 level: element.level,
                 info: info
             }
-        }));
+        })));
     });
 
     static getNFTByKey = (req, res) => Controller.execute(req, res, async (req, res) => {
@@ -104,14 +113,10 @@ class UserNFTKeyController {
                 INNER JOIN hv_user ON hv_user.id = hv_user_nft_key.user_id 
             WHERE hv_user_nft_key.id = $id`, {id: keyId});
 
-        const criptoKey = userNFTKey.key;
-
-        const info = {};
-        const nfts = await CriptoService.getNFTs(userNFTKey.wallet_user);
-        console.log(nfts)
+        const nft = await CriptoService.getNFT(userNFTKey.wallet_user, userNFTKey.key);
+        const info = CriptoService.getDecriptedDataFromNFT(nft, userNFTKey.key);
     
-
-        return nfts;
+        res.json(info);
     }) 
 
     static delete = (req, res) => Controller.execute(req, res, async (req, res) => {
