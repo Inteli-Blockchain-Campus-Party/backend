@@ -1,4 +1,4 @@
-const dotenv = require('dotenv').config()
+const dotenv = require('dotenv').config({path: __dirname + '/../../.env'})
 
 const { TokenExpiredError } = require('jsonwebtoken');
 const jsonwebtoken = require('jsonwebtoken');
@@ -15,13 +15,13 @@ class AuthService {
         return jsonwebtoken.decode(jwt);
     }
 
-    static verifyToken = (token, mustHaveId = true) => {
+    static verifyToken = (token, mustHaveId = true, type = 1) => {
         if(!token) throw new APIError('Token is a mandatory header field', 400);
 
         const jwt = this.getJWTbyAuthorization(token)
         
         try {
-            jsonwebtoken.verify(jwt, process.env.SECRET_KEY);
+            jsonwebtoken.verify(jwt, type == 1 ? process.env.SECRET_KEY : process.env.SECRET_KEY_HEALTH_ENTITY);
 
             if(mustHaveId){
                 const decodedToken = this.decodeToken(token);
@@ -46,8 +46,8 @@ class AuthService {
         return decodedToken.id;
     }
 
-    static makeTokenWithId = (id, expires = '5h') => {
-        return jsonwebtoken.sign({id: id}, process.env.SECRET_KEY, {
+    static makeTokenWithId = (id, expires = '5h', type = 1) => {
+        return jsonwebtoken.sign({id: id}, type == 1 ? process.env.SECRET_KEY : process.env.SECRET_KEY_HEALTH_ENTITY, {
             expiresIn: expires || '5h'
         })
     }

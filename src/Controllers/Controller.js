@@ -15,8 +15,7 @@ class Controller {
                 res.json(error.getObjectForClient());
             } else {
                 console.log(error);
-                res.status(500);
-                res.json({
+                res.status(500).json({
                     status: 500,
                     message: 'Um erro interno ocorreu'
                 })

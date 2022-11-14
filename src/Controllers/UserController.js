@@ -16,7 +16,7 @@ class UserController {
         const password_hash = crypto.pbkdf2Sync(password, password_salt, 1000, 64, 'sha1').toString('hex');
 
         const date = new Date();
-        const creation_date = date.getFullYear()  + "-" + date.getMonth()  + "-" + date.getDay()
+        const creation_date = date.getFullYear()  + "-" + date.getMonth()  + "-" + date.getDate()
         const update_date = null;
 
         const id = await Connection.insert("INSERT INTO hv_user (password_hash, password_salt, wallet, cpf, creation_date, update_date) VALUES ($password_hash, $password_salt, $wallet, $cpf, $creation_date, $update_date)", {
@@ -28,7 +28,11 @@ class UserController {
             update_date: update_date
         });
 
-        const token = AuthService.makeTokenWithId(id);
+        if(!id) {
+            throw new APIError("User couldn't be created", 403);
+        }
+
+        const token = AuthService.makeTokenWithId(id, '5h', 1);
 
         res.json({token: token})
     });
@@ -49,9 +53,7 @@ class UserController {
 
         if(crypto.pbkdf2Sync(password, user.password_salt, 1000, 64, 'sha1').toString('hex') == user.password_hash){
             res.send({
-                token: jsonwebtoken.sign({id: user.id}, process.env.SECRET_KEY, {
-                    expiresIn: '5s'
-                })
+                token: AuthService.makeTokenWithId(user.id, '5h', 1)
             })
         }else {
             res.status(403).send({
@@ -64,6 +66,10 @@ class UserController {
         const id = AuthService.getIdByToken(req.headers.authorization);
 
         const user = await Connection.get("SELECT * FROM hv_user WHERE hv_user.id = $id", {id: id});
+
+        if(!user){
+            throw new APIError("User not found", 400);
+        }
 
         res.send({
             id: user.id,
@@ -88,7 +94,7 @@ class UserController {
 
         if(cleanUpdateEntrie.length){
             const date = new Date();
-            const update_date = date.getFullYear()  + "-" + date.getMonth()  + "-" + date.getDay();
+            const update_date = date.getFullYear()  + "-" + date.getMonth()  + "-" + date.getDate();
             updateObject.update_date = update_date;
 
             await Connection.update(`UPDATE hv_user SET ${Object.keys(updateObject).map(key => `${key} = $${key}`).join(", ")} WHERE id = $id`, {...updateObject, id: id})
