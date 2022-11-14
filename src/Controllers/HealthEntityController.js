@@ -6,12 +6,13 @@ const AuthService = require('../Services/AuthService');
 
 class HealthEntityController {
     static create = (req, res) => Controller.execute(req, res, async (req, res) => {
-        const { password, cnpj, email, name} = req.body;
+        const { password, cnpj, email, name, uf} = req.body;
         
         if(!password) throw new APIError("Password is a mandatory field", 400);
         if(!cnpj) throw new APIError("Cnpj is a mandatory field", 400);
         if(!email) throw new APIError("Email is a mandatory field", 400);
         if(!name) throw new APIError("Name is a mandatory field", 400);
+        if(!uf) throw new APIError("uf is a mandatory field", 400);
 
         const password_salt = crypto.randomBytes(10).toString("hex");
         const password_hash = crypto.pbkdf2Sync(password, password_salt, 1000, 64, 'sha1').toString('hex');
@@ -20,10 +21,11 @@ class HealthEntityController {
         const creation_date = date.getFullYear()  + "-" + date.getMonth()  + "-" + date.getDate()
         const update_date = null;
 
-        const id = await Connection.insert("INSERT INTO hv_health_entity (password_hash, password_salt, name, cnpj, email, creation_date, update_date) VALUES ($password_hash, $password_salt, $name, $cnpj, $email, $creation_date, $update_date)", {
+        const id = await Connection.insert("INSERT INTO hv_health_entity (password_hash, password_salt, name, uf, cnpj, email, creation_date, update_date) VALUES ($password_hash, $password_salt, $name, $uf, $cnpj, $email, $creation_date, $update_date)", {
             password_hash: password_hash,
             password_salt: password_salt,
             name: name,
+            uf: uf,
             cnpj: cnpj,
             email: email,
             creation_date: creation_date,
@@ -72,6 +74,7 @@ class HealthEntityController {
         res.send({
             id: healthEntity.id,
             name: healthEntity.name,
+            uf: healthEntity.uf,
             cnpj: healthEntity.cnpj,
             email: healthEntity.email
         });
@@ -80,9 +83,9 @@ class HealthEntityController {
     static update = (req, res) => Controller.execute(req, res, async (req, res) => {
         const id = AuthService.getIdByToken(req.headers.authorization);
 
-        const {cnpj, email, name} = req.body;
+        const {cnpj, email, name, uf} = req.body;
 
-        let updateObject = {cnpj: cnpj, email: email, name: name};
+        let updateObject = {cnpj: cnpj, email: email, name: name, uf: uf};
         let cleanUpdateEntrie = Object.entries(updateObject).filter(element => element[1]);
     
         Object.entries(updateObject).forEach(element => {
@@ -105,7 +108,8 @@ class HealthEntityController {
             id: healthEntity.id,
             cnpj: healthEntity.cnpj,
             email: healthEntity.email,
-            name: healthEntity.name
+            name: healthEntity.name,
+            uf: healthEntity.uf,
         });
     });
 
