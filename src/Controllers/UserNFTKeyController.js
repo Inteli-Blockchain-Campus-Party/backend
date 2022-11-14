@@ -6,12 +6,17 @@ const AuthService = require('../Services/AuthService');
 
 class UserNFTKeyController {
     static create = (req, res) => Controller.execute(req, res, async (req, res) => {
-        const { key, level } = req.body;
+        const { key, level, info } = req.body;
 
         const user_id = AuthService.getIdByToken(req.headers.authorization);
         
         if(!key) res.status(400).send("key is a mandatory field");
         if(typeof level == 'undefined') res.status(400).send("level is a mandatory field");
+
+        // Enviar o objeto info (Doenças, tudo que o usuário quer criptografar na NFT com a KEY que ele passou).
+            
+
+        //
 
         const date = new Date();
         const creation_date = date.getFullYear()  + "-" + date.getMonth()  + "-" + date.getDate()
@@ -38,6 +43,7 @@ class UserNFTKeyController {
 
     static get = (req, res) => Controller.execute(req, res, async (req, res) => {
         const id = req.params.id;
+        const withNFTInfo = req.params.withNFT;
 
         const userNFTKey = await Connection.get("SELECT * FROM hv_user_nft_key WHERE hv_user_nft_key.id = $id", {id: id});
 
@@ -45,26 +51,55 @@ class UserNFTKeyController {
             throw new APIError("Key not found", 400);
         }
 
+        let info = undefined;
+        if(withNFTInfo){
+            info = {}
+            // Pegar informações da NFT;
+        }
+
         res.send({
             id: userNFTKey.id,
             key: userNFTKey.key,
-            level: userNFTKey.level
+            level: userNFTKey.level,
+            info
         });
     });
 
     static all = (req, res) => Controller.execute(req, res, async (req, res) => {
         const userId = AuthService.getIdByToken(req.headers.authorization);
+        const withNFTInfo = req.params.withNFT;
 
         const userNFTKeys = await Connection.all("SELECT * FROM hv_user_nft_key WHERE hv_user_nft_key.user_id = $user_id", {user_id: userId});
 
         res.send(userNFTKeys.map(element => {
+            let info = undefined;
+
+            if(withNFTInfo){
+                info = {}
+            // Pegar informações da NFT;
+            }
+
             return {
                 id: element.id,
                 key: element.key,
-                level: element.level
+                level: element.level,
+                info: info
             }
         }));
     });
+
+    static getNFTByKey = (req, res) => Controller.execute(req, res, async (req, res) => {
+        const keyId = req.params.id;
+
+        const userNFTKey = await Connection.get("SELECT * FROM hv_user_nft_key WHERE hv_user_nft_key.id = $id", {id: keyId});
+
+        const criptoKey = userNFTKey.key;
+
+        const info = {};
+        // const informacaoDaNFT = acesso a blockchain e descriptografia  
+
+        return info;
+    }) 
 
     static delete = (req, res) => Controller.execute(req, res, async (req, res) => {
         const id = req.params.id;
