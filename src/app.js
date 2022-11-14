@@ -5,7 +5,6 @@ const ConnectionService = require('./Services/ConnectionService')
 
 // Routes
 const routes = require('./Routes/Routes');
-const jsonwebtoken = require('jsonwebtoken');
 
 const port = 3001;
 const app = express()

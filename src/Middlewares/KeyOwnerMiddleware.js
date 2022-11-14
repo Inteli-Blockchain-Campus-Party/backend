@@ -24,12 +24,12 @@ class KeyOwnerMiddleware extends Middleware {
         const key = await ConnectionService.get(`
         SELECT hv_user_nft_key_health_entity.* 
         FROM hv_user_nft_key_health_entity
-            INNER JOIN hv_user_nft_key ON hv_user_nft_key.id = hv_user_nft_key_health_entity.user_nft_key.id 
+            INNER JOIN hv_user_nft_key ON hv_user_nft_key.id = hv_user_nft_key_health_entity.user_nft_key_id 
         WHERE hv_user_nft_key_health_entity.health_entity_id = $health_entity_id 
             AND hv_user_nft_key_health_entity.user_nft_key_id = $user_nft_key_id
             AND hv_user_nft_key.user_id = $user_id
         `
-        , {user_id: userId, key_id: keyId, health_entity_id: healthEntityId, key_id: keyId})
+        , {user_id: userId, user_nft_key_id: keyId, health_entity_id: healthEntityId})
 
         if(!key){
             throw new APIError("Key doesn't exist", 403);

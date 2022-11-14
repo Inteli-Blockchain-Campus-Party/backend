@@ -3,20 +3,26 @@ const crypto = require('crypto');
 const Connection = require('../Services/ConnectionService');
 const APIError = require('../Services/ErrorService');
 const AuthService = require('../Services/AuthService');
+const CriptoService = require('../Services/CriptoService');
 
 class UserNFTKeyController {
     static create = (req, res) => Controller.execute(req, res, async (req, res) => {
         const { key, level, info } = req.body;
 
         const user_id = AuthService.getIdByToken(req.headers.authorization);
+
+        const user = await Connection.get("SELECT * FROM hv_user WHERE hv_user.id = $id", {id: user_id});
         
         if(!key) res.status(400).send("key is a mandatory field");
         if(typeof level == 'undefined') res.status(400).send("level is a mandatory field");
 
         // Enviar o objeto info (Doenças, tudo que o usuário quer criptografar na NFT com a KEY que ele passou).
-            
-
-        //
+            // Criptografar com a key -> info + level
+        // const keyHash = crypto.pbkdf2Sync(key, '', 1000, 64, 'sha1').toString('hex');
+        const encryptedInfo = CriptoService.encrypt(info, key);
+        const formatedMetadata = CriptoService.formatNFTMetadata(encryptedInfo, level);
+        const tokenInfo = await CriptoService.upload(formatedMetadata);
+        // await CriptoService.mintNFT(user.wallet, tokenInfo.IpfsHash )
 
         const date = new Date();
         const creation_date = date.getFullYear()  + "-" + date.getMonth()  + "-" + date.getDate()
@@ -89,16 +95,23 @@ class UserNFTKeyController {
     });
 
     static getNFTByKey = (req, res) => Controller.execute(req, res, async (req, res) => {
-        const keyId = req.params.id;
+        const keyId = req.params.key;
 
-        const userNFTKey = await Connection.get("SELECT * FROM hv_user_nft_key WHERE hv_user_nft_key.id = $id", {id: keyId});
+        const userNFTKey = await Connection.get(`
+            SELECT hv_user_nft_key.*, 
+                hv_user.wallet AS wallet_user 
+            FROM hv_user_nft_key 
+                INNER JOIN hv_user ON hv_user.id = hv_user_nft_key.user_id 
+            WHERE hv_user_nft_key.id = $id`, {id: keyId});
 
         const criptoKey = userNFTKey.key;
 
         const info = {};
-        // const informacaoDaNFT = acesso a blockchain e descriptografia  
+        const nfts = await CriptoService.getNFTs(userNFTKey.wallet_user);
+        console.log(nfts)
+    
 
-        return info;
+        return nfts;
     }) 
 
     static delete = (req, res) => Controller.execute(req, res, async (req, res) => {
