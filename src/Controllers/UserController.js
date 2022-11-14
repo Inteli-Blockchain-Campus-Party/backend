@@ -8,9 +8,9 @@ class UserController {
     static create = (req, res) => Controller.execute(req, res, async (req, res) => {
         const { password, wallet, cpf } = req.body;
         
-        if(!password) res.status(400).send("Password is a mandatory field");
-        if(!wallet) res.status(400).send("Wallet is a mandatory field");
-        if(!cpf) res.status(400).send("Cpf is a mandatory field");
+        if(!password)return  res.status(400).send("Password is a mandatory field");
+        if(!wallet)return  res.status(400).send("Wallet is a mandatory field");
+        if(!cpf)return  res.status(400).send("Cpf is a mandatory field");
 
         const password_salt = crypto.randomBytes(10).toString("hex");
         const password_hash = crypto.pbkdf2Sync(password, password_salt, 1000, 64, 'sha1').toString('hex');
@@ -35,13 +35,14 @@ class UserController {
         const token = AuthService.makeTokenWithId(id, '5h', 1);
 
         res.json({token: token})
+        
     });
 
     static login = (req, res) => Controller.execute(req, res, async (req, res) => {
         const { login, password } = req.body;
 
-        if(!login) res.status(400).send("Login is a mandatory field");
-        if(!password) res.status(400).send("Password is a mandatory field");
+        if(!login)return  res.status(400).send("Login is a mandatory field");
+        if(!password)return  res.status(400).send("Password is a mandatory field");
 
         const user = await Connection.get("SELECT * FROM hv_user WHERE wallet= $login OR cpf = $login", {
             login: login

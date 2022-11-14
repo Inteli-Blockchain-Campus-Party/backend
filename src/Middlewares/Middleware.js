@@ -1,7 +1,7 @@
 const APIError = require('../Services/ErrorService');
 const LogService = require('../Services/LogService');
 
-class Controller {
+class Middleware {
     static async execute(req, res, next, callback) {
         try {
             const date = new Date();
@@ -26,4 +26,4 @@ class Controller {
     }
 }
 
-module.exports = Controller;
+module.exports = Middleware;

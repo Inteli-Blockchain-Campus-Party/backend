@@ -41,6 +41,8 @@ router.get("/keys/:id", AuthMiddleware.verifyUserToken, KeyOwnerMiddleware.verif
 router.get("/keys", AuthMiddleware.verifyUserToken, UserNFTKeyController.all);
 router.delete("/keys/:id", AuthMiddleware.verifyUserToken, KeyOwnerMiddleware.verifyKeyOwner, UserNFTKeyController.delete);
 
+router.get("/nft/:key", AuthMiddleware.verifyUserToken, UserNFTKeyController.getNFTByKey);
+
 router.post("/records", RecordController.post);
 
 router.all('*', (req, res) => Controller.execute(req, res, async (req, res) => {

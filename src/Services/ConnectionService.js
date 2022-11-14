@@ -1,5 +1,6 @@
 const sqlite = require('sqlite3').verbose();
 
+const APIError = require('./ErrorService');
 const LogService = require('./LogService');
 
 class ConnectionService {
@@ -26,7 +27,11 @@ class ConnectionService {
         return await new Promise(async (resolve, reject) => {
             this.db.run(query, this.getSQLParams(params), function (err){
                 if(err){
-                    return reject(err)
+                    if(err.message.includes("UNIQUE constraint")){
+                        return reject(new APIError("Couldn't create because duplicated unique column data", 400))
+                    }else{
+                        return reject(err)
+                    }
                 }
 
                 LogService.logSuccess(`INSERT successed with ID (${this.lastID})`)

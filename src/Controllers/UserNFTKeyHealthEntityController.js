@@ -17,16 +17,21 @@ class UsController {
             creation_date: creation_date
         });
 
-        if(!id) {
-            throw new APIError("health_entity_id couldn't be created", 403);
+        const userNFTHealthEntityId = await Connection.get(`
+            SELECT * 
+            FROM hv_user_nft_key_health_entity 
+            WHERE hv_user_nft_key_health_entity.health_entity_id = $health_entity_id 
+                AND hv_user_nft_key_health_entity.user_nft_key_id = $user_nft_key_id`
+            , {health_entity_id: health_entity_id, user_nft_key_id: user_nft_key_id});
+
+        if(!userNFTHealthEntityId){
+            throw new APIError("Couldn't create");
         }
 
-        const userNFTHealthEntityIds = await Connection.get("SELECT * FROM hv_user_nft_key_health_entity WHERE hv_user_nft_key_health_entity.id = $id", {id: id});
-
         res.json({
-            user_nft_key_id: userNFTHealthEntityIds.user_nft_key_id,
-            health_entity_id: userNFTHealthEntityIds.health_entity_id,
-            creation_date: userNFTHealthEntityIds.creation_date
+            user_nft_key_id: userNFTHealthEntityId.user_nft_key_id,
+            health_entity_id: userNFTHealthEntityId.health_entity_id,
+            creation_date: userNFTHealthEntityId.creation_date
         })
     });
 
@@ -34,7 +39,12 @@ class UsController {
         const health_entity_id = req.params.healthEntityId;
         const user_nft_key_id = req.params.userNFTKeyId;
 
-        const userNFTHealthEntityId = await Connection.all("SELECT * FROM hv_user_nft_key_health_entity WHERE hv_user_nft_key_health_entity.health_entity_id = $health_entity_id AND hv_user_nft_key_health_entity.user_nft_key_id = $user_nft_key_id", {health_entity_id: health_entity_id, user_nft_key_id: user_nft_key_id});
+        const userNFTHealthEntityId = await Connection.get(`
+            SELECT * 
+            FROM hv_user_nft_key_health_entity 
+            WHERE hv_user_nft_key_health_entity.health_entity_id = $health_entity_id 
+                AND hv_user_nft_key_health_entity.user_nft_key_id = $user_nft_key_id`
+                , {health_entity_id: health_entity_id, user_nft_key_id: user_nft_key_id});
 
         res.send({
             user_nft_key_id: userNFTHealthEntityId.user_nft_key_id,
