@@ -32,7 +32,11 @@ class HealthEntityController {
             update_date: update_date
         });
 
-        const token = AuthService.makeTokenWithId(id);
+        if(!id) {
+            throw new APIError("Health Entity couldn't be created", 403);
+        }
+
+        const token = AuthService.makeTokenWithId(id, '5h', 2);
 
         res.json({token: token})
     });
@@ -53,7 +57,7 @@ class HealthEntityController {
 
         if(crypto.pbkdf2Sync(password, healthEntity.password_salt, 1000, 64, 'sha1').toString('hex') == healthEntity.password_hash){
             res.send({
-                token: AuthService.makeTokenWithId(healthEntity.id)
+                token: AuthService.makeTokenWithId(healthEntity.id, '5h', 2)
             })
         }else {
             res.status(403).send({

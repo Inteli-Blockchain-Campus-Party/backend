@@ -28,7 +28,11 @@ class UserController {
             update_date: update_date
         });
 
-        const token = AuthService.makeTokenWithId(id);
+        if(!id) {
+            throw new APIError("User couldn't be created", 403);
+        }
+
+        const token = AuthService.makeTokenWithId(id, '5h', 1);
 
         res.json({token: token})
     });
@@ -49,7 +53,7 @@ class UserController {
 
         if(crypto.pbkdf2Sync(password, user.password_salt, 1000, 64, 'sha1').toString('hex') == user.password_hash){
             res.send({
-                token: AuthService.makeTokenWithId(user.id)
+                token: AuthService.makeTokenWithId(user.id, '5h', 1)
             })
         }else {
             res.status(403).send({
