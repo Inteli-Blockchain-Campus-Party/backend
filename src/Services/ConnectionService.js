@@ -27,7 +27,6 @@ class ConnectionService {
         return await new Promise(async (resolve, reject) => {
             this.db.run(query, this.getSQLParams(params), function (err){
                 if(err){
-                    console.log(err.message);
                     if(err.message.includes("UNIQUE constraint")){
                         return reject(new APIError("Couldn't create because duplicated unique column data", 400))
                     }else{
